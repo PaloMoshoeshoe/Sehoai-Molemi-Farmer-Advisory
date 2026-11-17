@@ -1,0 +1,1128 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Molemi Farm Advisor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: app shell. Top bar with product name and view tabs, a woven-blanket band, then a
+   two-column workspace (phone simulator | working panel) that stacks to one column on phones. */
+:root {
+  --bg: #F2F4F3;
+  --surface: #FFFFFF;
+  --surface-2: #E8ECEB;
+  --surface-3: #DDE3E1;
+  --ink: #16201E;
+  --ink-2: #4B5856;
+  --ink-3: #6E7B78;
+  --line: #D2DAD8;
+  --good: #23784A;
+  --good-soft: #DDF0E5;
+  --warn: #9A6300;
+  --warn-soft: #FBEBCB;
+  --crit: #B3261E;
+  --crit-soft: #F9DEDC;
+  --bezel: #1B2423;
+  --screen: #FBFCFB;
+  --ussd-bg: #10201A;
+  --ussd-ink: #B9F5CF;
+  --shadow: 0 1px 2px rgba(16, 24, 22, .06), 0 8px 24px rgba(16, 24, 22, .06);
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Segoe UI", Roboto, Arial, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r: 10px;
+  --r-s: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1514; --surface: #172020; --surface-2: #1E2928; --surface-3: #263332;
+    --ink: #E5ECEA; --ink-2: #A9B6B3; --ink-3: #85938F; --line: #2D3A38;
+    --good: #5CCB8D; --good-soft: #17342A; --warn: #E7AE48; --warn-soft: #3A2D12;
+    --crit: #F2857C; --crit-soft: #3D1D1B; --bezel: #050808; --screen: #121A19;
+    --ussd-bg: #07120D; --ussd-ink: #9CEDB9;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1514; --surface: #172020; --surface-2: #1E2928; --surface-3: #263332;
+  --ink: #E5ECEA; --ink-2: #A9B6B3; --ink-3: #85938F; --line: #2D3A38;
+  --good: #5CCB8D; --good-soft: #17342A; --warn: #E7AE48; --warn-soft: #3A2D12;
+  --crit: #F2857C; --crit-soft: #3D1D1B; --bezel: #050808; --screen: #121A19;
+  --ussd-bg: #07120D; --ussd-ink: #9CEDB9;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .3);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--surface);
+}
+h1, h2, h3, h4 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h2 { font-size: 1.15rem; font-weight: 700; }
+h3 { font-size: .98rem; font-weight: 700; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-2); }
+.small { font-size: .82rem; }
+.mono { font-family: var(--f-mono); }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.topbar-in {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1280px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 8px; flex: none;
+  background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; font-family: var(--f-display); font-weight: 800; font-size: 1rem;
+}
+.brand-name { font-family: var(--f-display); font-weight: 800; font-size: 1.12rem; line-height: 1.1; }
+.brand-sub { font-size: .78rem; color: var(--ink-2); line-height: 1.2; }
+.proto-pill {
+  font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  border: 1px solid var(--warn); color: var(--warn); background: var(--warn-soft);
+  padding: 2px 8px; border-radius: 99px; white-space: nowrap;
+}
+.tabs { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+.tab {
+  border: 1px solid transparent; background: transparent; padding: 7px 12px; border-radius: 8px;
+  cursor: pointer; font-weight: 700; color: var(--ink-2); text-decoration: none; font-size: .9rem;
+}
+.tab:hover { background: var(--surface-2); color: var(--ink); }
+.tab[aria-current="page"] { background: var(--accent-soft); color: var(--accent-strong); border-color: var(--accent-line); }
+.ai-pill {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--ink-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 3px 9px; background: var(--surface);
+}
+.ai-pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); display: inline-block; }
+.ai-pill[data-state="on"] i { background: var(--good); }
+.ai-pill[data-state="off"] i { background: var(--crit); }
+
+/* Woven band: stripes after the colour blocks of a Basotho wool blanket */
+.band {
+  height: 8px;
+  background:
+    repeating-linear-gradient(90deg,
+      var(--accent) 0 28px, var(--ink) 28px 31px, var(--band-2) 31px 52px,
+      var(--ink) 52px 55px, var(--band-3) 55px 70px, var(--ink) 70px 73px);
+  opacity: .9;
+}
+
+/* ---------- page ---------- */
+.wrap {
+  max-width: 1280px; margin: 0 auto;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 18px;
+}
+.notice {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1px solid var(--line); background: var(--surface); border-radius: var(--r);
+  padding: 10px 14px; font-size: .86rem; color: var(--ink-2);
+}
+.notice b { color: var(--ink); }
+.view[hidden] { display: none !important; }
+.split { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.split.even { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+@media (max-width: 880px) { .split, .split.even { grid-template-columns: minmax(0, 1fr); } }
+.inline-field { display: flex; align-items: center; gap: 6px; }
+.inline-field > span { font-size: .8rem; font-weight: 700; color: var(--ink-2); }
+.inline-field .input { width: auto; }
+.stack { display: grid; gap: 16px; min-width: 0; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.grow { flex: 1 1 auto; min-width: 0; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 16px; min-width: 0;
+}
+.card-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; }
+.card-h p { font-size: .84rem; color: var(--ink-2); }
+.eyebrow { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+
+/* KPI strip */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.kpi .v { font-family: var(--f-display); font-weight: 800; font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi .l { font-size: .8rem; color: var(--ink-2); }
+.kpi .s { font-size: .76rem; color: var(--ink-3); margin-top: 2px; }
+.kpi[data-tone="warn"] { border-color: var(--warn); }
+.kpi[data-tone="crit"] { border-color: var(--crit); }
+.kpi[data-tone="warn"] .v { color: var(--warn); }
+.kpi[data-tone="crit"] .v { color: var(--crit); }
+
+/* buttons & fields */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: .88rem;
+  text-decoration: none; white-space: nowrap;
+}
+.btn:hover { background: var(--surface-2); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--accent-strong); }
+.btn.sm { padding: 4px 9px; font-size: .8rem; }
+.btn svg { width: 16px; height: 16px; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span { font-size: .8rem; font-weight: 700; color: var(--ink-2); }
+.input, select.input, textarea.input {
+  width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: 8px;
+  padding: 8px 10px; min-width: 0;
+}
+textarea.input { resize: vertical; min-height: 70px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px; }
+.check {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 99px;
+  padding: 4px 10px; font-size: .84rem; cursor: pointer; background: var(--surface);
+}
+.check input { accent-color: var(--accent); }
+
+/* pills, chips */
+.pill {
+  display: inline-flex; align-items: center; gap: 4px; font-size: .74rem; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); background: var(--surface-2);
+  color: var(--ink-2); white-space: nowrap;
+}
+.pill.good { background: var(--good-soft); color: var(--good); border-color: transparent; }
+.pill.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
+.pill.crit { background: var(--crit-soft); color: var(--crit); border-color: transparent; }
+.pill.acc { background: var(--accent-soft); color: var(--accent-strong); border-color: transparent; }
+.chip {
+  display: inline-flex; align-items: center; font-size: .72rem; font-family: var(--f-mono);
+  padding: 1px 6px; border-radius: 4px; background: var(--accent-soft); color: var(--accent-strong);
+  border: 0; cursor: pointer;
+}
+
+/* tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .74rem; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); background: var(--surface-2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* horizontal bars */
+.bars { display: grid; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 150px) minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: .85rem; }
+.bar-track { height: 12px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--ink-3); border-radius: 3px; }
+.bar-row.hi .bar-fill { background: var(--accent); }
+.bar-row .bar-v { font-variant-numeric: tabular-nums; color: var(--ink-2); min-width: 2.5em; text-align: right; }
+
+/* list items */
+.list { display: grid; gap: 10px; }
+.item { border: 1px solid var(--line); border-radius: var(--r); padding: 12px; background: var(--surface); display: grid; gap: 6px; min-width: 0; }
+.item-h { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: .8rem; color: var(--ink-2); }
+.item q { quotes: none; font-weight: 700; color: var(--ink); }
+.empty { padding: 18px; text-align: center; color: var(--ink-2); font-size: .88rem; border: 1px dashed var(--line); border-radius: var(--r); }
+
+/* ---------- phone simulator ---------- */
+.phone {
+  width: 100%; max-width: 380px; margin: 0 auto;
+  background: var(--bezel); border-radius: 30px; padding: 10px; box-shadow: var(--shadow);
+}
+.phone-screen {
+  background: var(--screen); border-radius: 22px; overflow: hidden;
+  display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; height: 640px; max-height: 78vh;
+}
+.phone-status {
+  display: flex; justify-content: space-between; font-size: .72rem; font-weight: 700; padding: 8px 16px 2px;
+  font-family: var(--f-mono); color: var(--ink-2);
+}
+.phone-head {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.phone-head .who { font-weight: 700; font-size: .92rem; line-height: 1.15; }
+.phone-head .who small { display: block; font-weight: 400; color: var(--ink-2); font-size: .74rem; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; font-size: .85rem; flex: none; }
+.channels { display: flex; gap: 4px; padding: 6px 8px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.channels button {
+  flex: 1; border: 0; background: transparent; border-radius: 7px; padding: 6px 4px; font-size: .78rem; font-weight: 700;
+  color: var(--ink-2); cursor: pointer;
+}
+.channels button[aria-pressed="true"] { background: var(--surface); color: var(--accent-strong); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.msgs { overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.bubble {
+  max-width: 86%; padding: 8px 11px; border-radius: 14px; font-size: .9rem; line-height: 1.42;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.bubble.me { align-self: flex-end; background: var(--accent); color: var(--accent-ink); border-bottom-right-radius: 4px; }
+.bubble.bot { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.bubble.sys { align-self: center; background: transparent; color: var(--ink-3); font-size: .76rem; text-align: center; padding: 2px 8px; }
+.bubble .meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; align-items: center; }
+.bubble .meta .pill { font-size: .66rem; }
+.typing { color: var(--ink-3); font-style: italic; }
+.composer { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--line); background: var(--surface); align-items: flex-end; }
+.composer textarea {
+  flex: 1; resize: none; border: 1px solid var(--line); border-radius: 18px; padding: 8px 12px;
+  background: var(--screen); min-height: 38px; max-height: 110px; font-size: .9rem; min-width: 0;
+}
+.round {
+  width: 38px; height: 38px; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer; flex: none;
+  background: var(--accent); color: var(--accent-ink);
+}
+.round.alt { background: var(--surface-2); color: var(--ink); }
+.round[data-live="true"] { background: var(--crit); color: #fff; animation: pulse 1.2s infinite; }
+.round svg { width: 18px; height: 18px; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--crit-soft); } }
+@media (prefers-reduced-motion: reduce) { .round[data-live="true"] { animation: none; } }
+.quick { display: flex; gap: 6px; overflow-x: auto; padding: 0 12px 8px; }
+.quick button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 10px; font-size: .78rem; cursor: pointer; }
+
+/* USSD screen */
+.ussd { background: var(--ussd-bg); color: var(--ussd-ink); font-family: var(--f-mono); font-size: .86rem; padding: 16px; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; }
+.ussd-box { border: 1px solid color-mix(in srgb, var(--ussd-ink) 40%, transparent); border-radius: 8px; padding: 12px; white-space: pre-wrap; overflow-y: auto; min-height: 0; line-height: 1.45; }
+.ussd-in { display: flex; gap: 6px; }
+.ussd-in input { flex: 1; background: transparent; border: 1px solid color-mix(in srgb, var(--ussd-ink) 50%, transparent); color: var(--ussd-ink); border-radius: 6px; padding: 6px 8px; font-family: var(--f-mono); min-width: 0; }
+.ussd-in button { background: var(--ussd-ink); color: var(--ussd-bg); border: 0; border-radius: 6px; padding: 6px 10px; font-weight: 700; font-family: var(--f-mono); cursor: pointer; }
+.ussd .hint { font-size: .72rem; opacity: .75; }
+
+/* Voice call screen */
+.call { display: grid; align-content: center; justify-items: center; gap: 14px; padding: 20px; text-align: center; background: linear-gradient(180deg, var(--accent-soft), var(--screen)); min-height: 0; overflow-y: auto; }
+.call .big { width: 72px; height: 72px; border-radius: 50%; }
+.call .big svg { width: 28px; height: 28px; }
+.call .line { font-size: .9rem; max-width: 30ch; }
+.call .heard { font-size: .82rem; color: var(--ink-2); min-height: 2.5em; }
+
+/* AI output box */
+.ai-out { border: 1px solid var(--accent-line); background: var(--accent-soft); border-radius: var(--r); padding: 12px 14px; white-space: pre-wrap; font-size: .9rem; min-height: 2.5em; }
+.ai-out:empty { display: none; }
+
+/* toast */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 20;
+  background: var(--ink); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: .88rem;
+  box-shadow: var(--shadow); max-width: calc(100% - 32px);
+}
+.footer { font-size: .78rem; color: var(--ink-3); text-align: center; padding-top: 8px; }
+@media (max-width: 640px) { .topbar { position: static; } .tabs { margin-left: 0; width: 100%; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Farm Advisor accent: maize-husk ochre; band colours from a highland blanket (grass green, sorghum red) */
+:root {
+  --accent: #85560F; --accent-ink: #FFFFFF; --accent-strong: #74490A;
+  --accent-soft: #F5EAD6; --accent-line: #E2C690;
+  --band-2: #3E6B4C; --band-3: #A6452E;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --accent: #E2A94B; --accent-ink: #1C1305; --accent-strong: #F1C273;
+    --accent-soft: #33260F; --accent-line: #5E4519; --band-2: #5E9A70; --band-3: #D0705A;
+  }
+}
+:root[data-theme="dark"] {
+  --accent: #E2A94B; --accent-ink: #1C1305; --accent-strong: #F1C273;
+  --accent-soft: #33260F; --accent-line: #5E4519; --band-2: #5E9A70; --band-3: #D0705A;
+}
+.passage { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; background: var(--surface); display: grid; gap: 4px; }
+.passage h3 { font-size: .95rem; }
+.passage .tag { font-family: var(--f-mono); font-size: .74rem; color: var(--accent-strong); }
+.passage p { font-size: .88rem; color: var(--ink-2); }
+.passage.flash { outline: 2px solid var(--accent); }
+.signal { border-left: 4px solid var(--crit); }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.profile { display: grid; gap: 10px; }
+.reply-box { display: grid; gap: 6px; }
+.ans { font-size: .86rem; color: var(--ink-2); border-left: 3px solid var(--line); padding-left: 8px; white-space: pre-wrap; }
+
+</style>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">M</div>
+      <div>
+        <div class="brand-name">Molemi Farm Advisor</div>
+        <div class="brand-sub">Voice-first farm advice in Sesotho · pilot prototype</div>
+      </div>
+      <span class="proto-pill">Prototype</span>
+    </div>
+    <nav class="tabs" aria-label="Views">
+      <a class="tab" href="#farmer" data-tab="farmer">Farmer's phone</a>
+      <a class="tab" href="#officer" data-tab="officer">Extension officer</a>
+      <a class="tab" href="#library" data-tab="library">Approved content</a>
+    </nav>
+    <span class="ai-pill" id="aiPill" data-state="wait"><i></i><span>Connecting to Claude…</span></span>
+  </div>
+  <div class="band" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <div class="notice" role="note">
+    <span>
+      <b>Demo prototype with sample data.</b> Answers are written live by Claude, using only the sample "approved content" in this page.
+      That content was written for the demo and is not Ministry-approved. Don't act on it for real farming decisions.
+    </span>
+  </div>
+
+  <!-- FARMER VIEW -->
+  <section class="view" data-view="farmer" aria-label="Farmer's phone">
+    <div class="split">
+      <div class="stack">
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-status"><span class="clock">09:41</span><span>LS 3G ▮▮▯</span></div>
+            <div class="phone-head">
+              <div class="avatar" aria-hidden="true">M</div>
+              <div class="who grow">Molemi<small id="chanLabel">WhatsApp · toll-free</small></div>
+              <button class="btn sm ghost" id="clearChat" type="button">Clear</button>
+            </div>
+            <div class="channels" role="group" aria-label="Channel">
+              <button type="button" data-chan="chat" aria-pressed="true">Chat</button>
+              <button type="button" data-chan="ussd" aria-pressed="false">USSD *321#</button>
+              <button type="button" data-chan="voice" aria-pressed="false">Voice line</button>
+            </div>
+
+            <!-- chat -->
+            <div class="msgs" id="msgs" aria-live="polite" data-pane="chat"></div>
+            <div data-pane="chat">
+              <div class="quick" id="quick"></div>
+              <form class="composer" id="chatForm">
+                <label class="sr" for="chatIn">Message</label>
+                <textarea id="chatIn" rows="1" placeholder="Ask in Sesotho or English…"></textarea>
+                <button class="round alt" type="button" id="chatMic" title="Speak your question" aria-label="Speak your question" hidden></button>
+                <button class="round" type="submit" id="chatSend" aria-label="Send"></button>
+              </form>
+            </div>
+
+            <!-- ussd -->
+            <div class="ussd" data-pane="ussd" hidden>
+              <div class="ussd-box" id="ussdBox" aria-live="polite"></div>
+              <form class="ussd-in" id="ussdForm">
+                <label class="sr" for="ussdIn">Reply</label>
+                <input id="ussdIn" autocomplete="off" placeholder="Reply">
+                <button type="submit">Send</button>
+              </form>
+              <div class="hint">Works on any phone, no data bundle. Type a number. 00 = main menu.</div>
+            </div>
+
+            <!-- voice -->
+            <div class="call" data-pane="voice" hidden>
+              <div class="eyebrow">Toll-free voice line</div>
+              <div class="line" id="callLine">Call 0800 MOLEMI to ask by voice.</div>
+              <button class="round big" type="button" id="callBtn" aria-label="Start call"></button>
+              <button class="round big alt" type="button" id="callMic" aria-label="Speak" hidden></button>
+              <div class="heard" id="callHeard"></div>
+              <form class="row" id="callTypeForm" hidden style="width:100%">
+                <label class="sr" for="callType">What the farmer says</label>
+                <input class="input grow" id="callType" placeholder="Type what the caller says">
+                <button class="btn sm" type="submit">Ask</button>
+              </form>
+              <div class="line small muted" id="callAnswer"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stack">
+        <div class="card profile">
+          <div class="card-h"><h2>Caller profile</h2><p>The pilot only stores district, channel and question.</p></div>
+          <div class="grid2">
+            <label class="field"><span>District</span><select class="input" id="district"></select></label>
+            <label class="field"><span>Reply language</span>
+              <select class="input" id="lang">
+                <option value="auto">Same as the farmer</option>
+                <option value="st">Sesotho</option>
+                <option value="en">English</option>
+              </select></label>
+            <label class="field"><span>Answer quality</span>
+              <select class="input" id="tier">
+                <option value="quick">Fast</option>
+                <option value="default">Best (slower)</option>
+              </select></label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>How this answer was made</h2><p>Updates with each answer</p></div>
+          <div id="trace" class="list"><div class="empty">Ask a question on the phone. The approved passages Claude used will show here.</div></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h2>Try these</h2></div>
+          <ul class="small muted" style="margin:0;padding-left:18px;display:grid;gap:4px">
+            <li>"Ke bona liboko tse jang poone ea ka. Ke etse joang?" (Sesotho: worms are eating my maize)</li>
+            <li>"My sheep are limping and their feet smell bad."</li>
+            <li>"When should I plant maize in Thaba-Tseka?"</li>
+            <li>"My goat has a swollen jaw and won't eat." (should go to an officer)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OFFICER VIEW -->
+  <section class="view" data-view="officer" aria-label="Extension officer dashboard" hidden>
+    <div class="stack">
+      <div class="row">
+        <h2 class="grow">District extension dashboard</h2>
+        <label class="inline-field"><span>District</span>
+          <select class="input" id="offDistrict"></select></label>
+        <label class="inline-field"><span>Period</span>
+          <select class="input" id="offPeriod"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option></select></label>
+      </div>
+      <p class="small muted" id="dbStatus"></p>
+      <div class="kpis" id="kpis"></div>
+      <div class="split even">
+        <div class="card">
+          <div class="card-h"><h2>Needs an officer</h2><p id="queueCount"></p></div>
+          <div class="list" id="queue"></div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <div class="card-h"><h2>Rising problems</h2><p>Last 7 days vs the 7 before</p></div>
+            <div class="list" id="signals"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>Questions by topic</h2></div>
+            <div class="bars" id="topicBars"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h2>Weekly brief</h2><button class="btn sm primary" id="briefBtn" type="button">Write brief with Claude</button></div>
+            <div class="ai-out" id="briefOut"></div>
+            <p class="small muted" id="briefHint">Claude reads the questions in this period and drafts a short brief for the district office.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>Recent questions</h2><p>Newest first</p></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>When</th><th>District</th><th>Channel</th><th>Topic</th><th>Question</th><th>Status</th></tr></thead>
+          <tbody id="recent"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIBRARY VIEW -->
+  <section class="view" data-view="library" aria-label="Approved content" hidden>
+    <div class="stack">
+      <div class="card">
+        <h2>Approved content library</h2>
+        <p class="muted" style="margin-top:6px;max-width:70ch">In the pilot, every passage comes from a Ministry of Agriculture manual or crop calendar and is signed off by an expert before it is loaded.
+          Claude may only answer from these passages. The passages below are <b>sample text written for this prototype</b>.</p>
+      </div>
+      <div class="lib-grid" id="library"></div>
+    </div>
+  </section>
+
+  <p class="footer">Molemi is a prototype for a proposal to the Ministry of Agriculture, Food Security and Nutrition. It is not an official government service.</p>
+</main>
+
+<script>
+window.APP = { caps: ["sample", "db", "user", "dictation", "tts"] };
+
+</script>
+<script>
+"use strict";
+/* ---------- tiny DOM helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+function h(tag, attrs, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "text") e.textContent = v;
+    else if (k.startsWith("on") && typeof v === "function") e.addEventListener(k.slice(2), v);
+    else if (k === "style") e.style.cssText = v;
+    else e.setAttribute(k, v === true ? "" : String(v));
+  }
+  for (const c of kids.flat(3)) if (c != null && c !== false) e.append(c.nodeType ? c : String(c));
+  return e;
+}
+const ICONS = {
+  send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',
+  mic: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>',
+  phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>',
+  hang: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 14c5-5 13-5 18 0l-2.5 2.5-3.5-1.5v-3a10 10 0 0 0-6 0v3L5.5 16.5z"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+};
+function icon(name) { const t = document.createElement("template"); t.innerHTML = ICONS[name]; return t.content.firstChild; }
+
+/* ---------- time & format ---------- */
+const DAY = 864e5;
+function relTime(iso) {
+  const t = Date.parse(iso); if (!t) return "";
+  const m = Math.round((Date.now() - t) / 6e4);
+  if (m < 1) return "just now";
+  if (m < 60) return m + " min ago";
+  const hh = Math.round(m / 60); if (hh < 24) return hh + " h ago";
+  const d = Math.round(hh / 24); return d === 1 ? "yesterday" : d + " days ago";
+}
+function fmtDate(iso, withYear) {
+  const t = new Date(iso); if (isNaN(t)) return "";
+  return t.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: withYear ? "numeric" : undefined });
+}
+function fmtTime(d = new Date()) { return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
+const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+function countBy(arr, fn) { const m = new Map(); for (const x of arr) { const k = fn(x); if (k == null) continue; m.set(k, (m.get(k) || 0) + 1); } return [...m.entries()].sort((a, b) => b[1] - a[1]); }
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg) {
+  let t = $(".toast");
+  if (!t) { t = h("div", { class: "toast", role: "status" }); document.body.append(t); }
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3800);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast("Copied"); }
+  catch { toast("Copy isn't allowed here. Select the text and copy it."); }
+}
+
+/* ---------- hash views ---------- */
+function startRouter(defaultView) {
+  const views = $$("[data-view]"), tabs = $$("[data-tab]");
+  const show = () => {
+    const want = (location.hash || "").slice(1);
+    const v = views.some((x) => x.dataset.view === want) ? want : defaultView;
+    views.forEach((x) => { x.hidden = x.dataset.view !== v; });
+    tabs.forEach((t) => t.setAttribute("aria-current", t.dataset.tab === v ? "page" : "false"));
+    document.dispatchEvent(new CustomEvent("viewchange", { detail: v }));
+  };
+  window.addEventListener("hashchange", show); show();
+}
+
+/* ---------- Claude runtime capabilities ---------- */
+const CAP = { sample: null, db: null, user: null, dictation: null, tts: null, canWrite: null, uid: null };
+const capReady = (async () => {
+  const names = (window.APP && APP.caps) || [];
+  if (!window.claude || typeof window.claude.use !== "function") { setAiPill(); return CAP; }
+  await Promise.all(names.map(async (n) => { try { CAP[n] = await window.claude.use(n); } catch { CAP[n] = null; } }));
+  if (CAP.user) {
+    try { CAP.canWrite = await CAP.user.can("data.write"); } catch { CAP.canWrite = null; }
+    try { CAP.uid = await CAP.user.id(); } catch { CAP.uid = null; }
+  }
+  setAiPill(); return CAP;
+})();
+function setAiPill() {
+  const p = $("#aiPill"); if (!p) return;
+  const on = !!CAP.sample;
+  p.dataset.state = on ? "on" : "off";
+  p.lastChild.textContent = on ? "Claude connected" : "Claude unavailable here";
+}
+function aiErrorCopy(e) {
+  switch (e && e.code) {
+    case "cancelled": return "";
+    case "not_granted": return "Claude is switched off for this page. Allow it in the page's permissions to get AI answers.";
+    case "sampling_disabled": return "Claude isn't available on this account.";
+    case "rate_limited": return "Too many requests just now. Wait a minute, then try again.";
+    case "session_expired": return "Your Claude session has expired. Sign in again.";
+    case "refused": return "Claude declined that request. Try asking it another way.";
+    case "invalid_json": return "The answer came back in an unexpected format. Try again.";
+    case "no_ai": return "Claude can't be reached from this view. Open the page on claude.ai while signed in.";
+    case "images_unavailable": return "Image reading isn't available in this view.";
+    case "image_rejected": return "That image couldn't be read. Try a JPG or PNG under 20 MB.";
+    default: return "Claude couldn't answer just now. Try again.";
+  }
+}
+/** Ask Claude. Streams plain text through onText; returns {text}. */
+async function askClaude(input, opts = {}) {
+  if (!CAP.sample) throw { code: "no_ai" };
+  const o = { cache: false, modelTier: opts.tier || "quick" };
+  if (opts.onText) o.onText = opts.onText;
+  if (opts.signal) o.signal = opts.signal;
+  if (opts.images) o.images = opts.images;
+  if (opts.tools) { o.tools = opts.tools; delete o.cache; }
+  return CAP.sample(input, o);
+}
+async function askClaudeJSON(input, opts = {}) {
+  if (!CAP.sample) throw { code: "no_ai" };
+  const o = { cache: false, modelTier: opts.tier || "quick" };
+  if (opts.images) o.images = opts.images;
+  if (opts.signal) o.signal = opts.signal;
+  return CAP.sample.json(input, o);
+}
+/** Split a streamed reply of the form "<answer text>\n@@META@@\n{json}". */
+function splitMeta(text) {
+  const i = text.indexOf("@@META@@");
+  if (i < 0) return { body: text.trim(), meta: null };
+  let meta = null;
+  const raw = text.slice(i + 8);
+  const a = raw.indexOf("{"), b = raw.lastIndexOf("}");
+  if (a >= 0 && b > a) { try { meta = JSON.parse(raw.slice(a, b + 1)); } catch { meta = null; } }
+  return { body: text.slice(0, i).trim(), meta };
+}
+
+/* ---------- shared data (db) ---------- */
+function watchCollection(coll, cb, { order, dir = "desc", limit, statusEl } = {}) {
+  if (!CAP.db) { if (statusEl) statusEl.textContent = "Shared data isn't available in this view."; cb([]); return () => {}; }
+  let q = CAP.db.collection(coll);
+  if (order) q = q.orderBy(order, dir);
+  if (limit) q = q.limit(limit);
+  const timer = setTimeout(() => { if (statusEl) statusEl.textContent = "Still connecting to shared data…"; }, 10000);
+  return q.onSnapshot((s) => {
+    if (!s.metadata.fromCache) { clearTimeout(timer); if (statusEl) statusEl.textContent = ""; }
+    cb(s.docs.map((d) => Object.assign({ _id: d.id }, d.data())));
+  }, () => { clearTimeout(timer); if (statusEl) statusEl.textContent = "Shared data couldn't be loaded in this view."; });
+}
+async function dbAdd(coll, data) {
+  if (!CAP.db) throw { code: "no_db" };
+  return CAP.db.collection(coll).add(data);
+}
+async function dbSet(coll, id, data) { if (!CAP.db) throw { code: "no_db" }; return CAP.db.collection(coll).doc(id).set(data); }
+async function dbUpdate(coll, id, data) { if (!CAP.db) throw { code: "no_db" }; return CAP.db.collection(coll).doc(id).update(data); }
+function dbErrorCopy(e) {
+  if (e && e.code === "no_db") return "Saving needs the page opened on claude.ai.";
+  if (e && e.code === "invalid_argument") return "You can view this prototype but not save to it. Ask the owner for Contributor access.";
+  if (e && e.code === "quota_exceeded") return "The demo database is full. Ask the owner to clear old records.";
+  return "That couldn't be saved. Try again.";
+}
+
+/* ---------- voice: dictation in, Claude voice out ---------- */
+const VOICE = { target: null, live: false, ready: false, buttons: new Set() };
+function setupDictation() {
+  const d = CAP.dictation;
+  if (!d || VOICE.ready) return !!d;
+  VOICE.ready = true;
+  d.onPartial(({ text }) => VOICE.target && VOICE.target.partial && VOICE.target.partial(text));
+  d.onFinal(({ text }) => VOICE.target && VOICE.target.final && VOICE.target.final(text));
+  d.onState(({ state, reason }) => {
+    VOICE.live = state === "listening" || state === "starting";
+    VOICE.buttons.forEach((b) => { b.dataset.live = String(VOICE.live && VOICE.target && VOICE.target.btn === b); });
+    if (state === "idle" && VOICE.target && VOICE.target.done) VOICE.target.done(reason);
+  });
+  return true;
+}
+/** Wire a mic button. target = {partial(text), final(text), done(reason), lang()} */
+function wireMic(btn, target) {
+  if (!CAP.dictation) { btn.hidden = true; return; }
+  setupDictation(); VOICE.buttons.add(btn); btn.hidden = false;
+  btn.addEventListener("click", () => {
+    const d = CAP.dictation;
+    if (VOICE.live) { d.stop().catch(() => {}); return; }
+    VOICE.target = Object.assign({ btn }, target);
+    const lang = target.lang ? target.lang() : "";
+    d.start(lang ? { language: lang } : undefined).catch((e) => {
+      if (e && e.code === "not_granted") { btn.hidden = true; toast("Microphone use was declined. You can type instead."); }
+      else if (e && e.code === "unavailable" && lang && lang !== "en") toast("Speech input in this language isn't offered in this browser yet. Switch to English or type.");
+      else if (e && e.code !== "stopped" && e.code !== "dismissed") toast("Speech input isn't available here. Type instead.");
+    });
+  });
+}
+async function speakText(text, lang) {
+  if (!CAP.tts) { toast("Reading aloud isn't available in this browser."); return; }
+  try { await CAP.tts.speak(String(text).slice(0, 1900), lang ? { language: lang } : undefined); }
+  catch (e) {
+    if (e && (e.code === "stopped" || e.code === "replaced")) return;
+    toast(e && e.code === "not_granted" ? "Reading aloud is switched off for this page." : "Couldn't read that aloud.");
+  }
+}
+
+/* ---------- small renderers ---------- */
+function renderBars(el, rows, { hiKey } = {}) {
+  el.replaceChildren();
+  if (!rows.length) { el.append(h("div", { class: "empty", text: "No data yet." })); return; }
+  const max = Math.max(...rows.map((r) => r[1]), 1);
+  for (const [label, v] of rows) {
+    el.append(h("div", { class: "bar-row" + (label === hiKey ? " hi" : "") },
+      h("span", { text: label }),
+      h("div", { class: "bar-track" }, h("div", { class: "bar-fill", style: "width:" + Math.max(2, (v / max) * 100) + "%" })),
+      h("span", { class: "bar-v", text: String(v) })));
+  }
+}
+function kpi(label, value, sub, tone) {
+  return h("div", { class: "kpi", "data-tone": tone || null },
+    h("div", { class: "v", text: String(value) }), h("div", { class: "l", text: label }), sub ? h("div", { class: "s", text: sub }) : null);
+}
+function phoneClock() { const el = $$(".phone-status .clock"); el.forEach((e) => { e.textContent = fmtTime(); }); }
+setInterval(phoneClock, 30000);
+document.addEventListener("DOMContentLoaded", phoneClock);
+const DISTRICTS = ["Berea", "Butha-Buthe", "Leribe", "Mafeteng", "Maseru", "Mohale's Hoek", "Mokhotlong", "Qacha's Nek", "Quthing", "Thaba-Tseka"];
+
+/* ================= Molemi Farm Advisor ================= */
+/* Sample "approved content". Written for the prototype; the pilot loads Ministry manuals instead. */
+const LIB = [
+  { id: "P01", topic: "crops", title: "Maize planting window, lowlands and foothills", text: "Plant maize when the soil is moist after at least 25 mm of rain, usually from mid-October to mid-December. Planting after December raises the risk that frost hits before the grain fills. Use certified seed. Space rows about 90 cm apart with plants about 30 cm apart in the row." },
+  { id: "P02", topic: "crops", title: "Maize in the mountains", text: "The mountain growing season is short. Plant from October to early November and choose early-maturing varieties so the crop is ready before autumn frost, which can arrive from March. Do not plant late in the mountains." },
+  { id: "P03", topic: "pests", title: "Fall armyworm in maize", text: "Signs: small see-through 'windows' on young leaves, ragged holes, and wet sawdust-like droppings in the funnel. Check 20 plants in five places across the field every week. If more than 1 in 5 young plants show fresh damage, act: crush or hand-pick caterpillars, put a pinch of dry sand or ash in each funnel on small plots, or use a pesticide registered for fall armyworm, exactly as the label says. Report large outbreaks to the extension officer." },
+  { id: "P04", topic: "pests", title: "Maize stalk borer", text: "Signs: rows of small holes in the leaves and a dead central shoot ('dead heart'). After harvest, remove or plough in old maize stalks, where borers survive the winter. Early, even planting reduces damage. Registered granules can be placed in the funnel, following the label." },
+  { id: "P05", topic: "crops", title: "Sorghum", text: "Sorghum handles drought better than maize. Plant from November to December once the soil is warm. Birds damage ripening heads, so scare birds in the weeks before harvest and harvest as soon as the grain is hard." },
+  { id: "P06", topic: "crops", title: "Beans", text: "Plant beans from November to December, after the risk of frost has passed, on well-drained soil. Do not plant in waterlogged fields. Rotating beans with maize adds nitrogen to the soil and helps the next maize crop." },
+  { id: "P07", topic: "crops", title: "Potatoes in the highlands", text: "Plant clean seed potatoes in ridges and earth them up as they grow. In wet weather watch for late blight: dark, spreading patches on the leaves. Remove badly infected plants and use a registered fungicide following the label. Store potatoes in a cool, dark, airy place." },
+  { id: "P08", topic: "soil", title: "Soil and water conservation", text: "Plough along the contour, never up and down the slope. Keep grass strips along the contours and do not plough very steep slopes. Stop gullies (dongas) from growing with lines of stones across them. Leave crop residue on the field as cover after harvest." },
+  { id: "P09", topic: "livestock", title: "Sheep scab", text: "Signs: strong itching, sheep rubbing against walls, wool falling out, and crusty scabs. Scab spreads fast between flocks. Report suspected scab to the district veterinary office at once. Treatment is done under veterinary guidance, and the whole flock is treated together. Keep the flock off shared grazing until it is cleared." },
+  { id: "P10", topic: "livestock", title: "Foot rot in sheep and goats", text: "Signs: lameness and grey, bad-smelling rotten tissue between the claws. It is worse in wet, muddy kraals. Separate lame animals, keep the flock on dry ground, trim overgrown hooves carefully, and use a footbath with a registered product following the label. Ask the extension officer or a vet if animals do not improve within a week." },
+  { id: "P11", topic: "livestock", title: "Worms in sheep and goats", text: "Signs: weight loss, diarrhoea, a soft swelling under the jaw ('bottle jaw') and pale eyelids. Check eyelid colour: very pale means the animal needs treatment. Treat only the animals that need it, with a registered dewormer at the dose on the label for the animal's weight. Move animals to clean grazing when possible. Overusing dewormers makes worms resistant." },
+  { id: "P12", topic: "livestock", title: "Shearing and fleece quality (wool and mohair)", text: "Shear only in dry weather and on a clean floor. Keep fleeces free of dung, straw and plant burrs. Remove the dirty edges of each fleece before packing. Keep black or coloured fibres apart. Pack in clean wool packs and sell through a registered shearing shed." },
+  { id: "P13", topic: "livestock", title: "Angora goat kids", text: "Newborn kids are very sensitive to cold and wet weather in their first weeks. Give them shelter from wind and rain, and make sure each kid drinks its mother's first milk within a few hours of birth. Avoid shearing young goats just before a cold spell." },
+  { id: "P14", topic: "livestock", title: "Ticks on cattle", text: "Check cattle every week, especially the ears, udder, under the tail and between the legs. Dip or spray with a registered tick remedy following the label. Ticks spread diseases such as heartwater and redwater. An animal with a high fever, red urine or that stops eating should be seen by a vet." },
+  { id: "P15", topic: "livestock", title: "Livestock in drought", text: "Reduce the herd early in a drought: sell older and weaker animals first and keep the best breeding stock. Keep water close to grazing. Feed licks or supplements as the supplier directs. Do not wait until animals are thin to act." },
+  { id: "P16", topic: "livestock", title: "Newcastle disease in chickens", text: "Signs: many chickens dying suddenly, twisted necks, gasping and green diarrhoea. Separate sick birds and do not sell or move birds from the flock. Vaccinate healthy chickens on the schedule a vet or extension officer gives. Report sudden deaths to the extension officer." },
+  { id: "P17", topic: "weather", title: "Frost, hail and weather warnings", text: "Follow forecasts and warnings from Lesotho Meteorological Services on the radio. Frost is common in the highlands from autumn to spring. Do not plant frost-tender crops until the frost risk has passed. After hail, check plants: maize hit early can often recover." },
+  { id: "P18", topic: "market", title: "Market prices and input subsidies", text: "This prototype has no live market prices or current subsidy rules. Advise the farmer to check prices at the nearest market or shearing shed, and to ask the district agriculture office about current input subsidies. The pilot will link to a live price feed." },
+];
+const TOPICS = ["crops", "pests", "livestock", "soil", "weather", "market", "other"];
+const QUICK = ["When should I plant maize?", "Worms are eating my maize", "Ke bona liboko tse jang poone ea ka. Ke etse joang?", "My sheep are limping", "How do I keep wool clean?"];
+const CHANNEL_NAME = { chat: "WhatsApp chat", ussd: "USSD *321#", voice: "Voice line" };
+const state = { chan: "chat", history: [], questions: [], busy: false, warned: false };
+
+/* ---------- Claude prompt ---------- */
+function buildPrompt(q, { channel, maxWords, maxChars, voice }) {
+  const sel = $("#lang").value;
+  const langRule = sel === "st" ? "Reply in Sesotho." : sel === "en" ? "Reply in English."
+    : "Reply in the same language the farmer used (Sesotho or English).";
+  const length = maxChars ? `The whole reply must be at most ${maxChars} characters: it has to fit one USSD screen.` : `At most ${maxWords} words.`;
+  const style = voice ? "It will be read aloud on a phone call: use short spoken sentences, no lists or symbols." : "Plain text only: no markdown, no headings, no bullet symbols.";
+  const hist = state.history.slice(-4).map((t) => (t.role === "user" ? "Farmer: " : "Molemi: ") + t.content).join("\n");
+  return [
+    "You are Molemi, a prototype farm-advice assistant for smallholder farmers in Lesotho, working with the district extension service.",
+    "Rules:",
+    "- Use ONLY the approved passages below. Never add facts, doses, prices, product names or dates that are not in them.",
+    "- If the passages do not answer the question, or an animal is very sick, dying or needs a vet, say you are sending the question to the district extension officer, and give only safe general steps that are in the passages.",
+    "- " + langRule + " Use simple words a farmer uses every day. " + length + " " + style,
+    "- Never mention passage numbers in the reply.",
+    "After the reply, write a new line containing exactly @@META@@ and then one line of JSON with these keys:",
+    '{"language":"st" or "en","sources":["P03"],"confidence":"high"|"medium"|"low","escalate":true|false,"topic":"crops"|"pests"|"livestock"|"soil"|"weather"|"market"|"other","keyword":"one or two English words naming the main problem, e.g. fall armyworm","summary_en":"the question in English, at most 12 words"}',
+    "",
+    `Farmer's district: ${$("#district").value}. Channel: ${CHANNEL_NAME[channel]}.`,
+    hist ? "Earlier in this conversation:\n" + hist : "",
+    "",
+    "Approved passages:",
+    LIB.map((p) => `[${p.id}] ${p.title}: ${p.text}`).join("\n"),
+    "",
+    "Farmer's message: " + q,
+  ].join("\n");
+}
+function normMeta(m) {
+  m = m || {};
+  return {
+    language: m.language === "st" ? "st" : "en",
+    sources: Array.isArray(m.sources) ? m.sources.map(String).filter((id) => LIB.some((p) => p.id === id)) : [],
+    confidence: ["high", "medium", "low"].includes(m.confidence) ? m.confidence : "medium",
+    escalate: m.escalate === true,
+    topic: TOPICS.includes(m.topic) ? m.topic : "other",
+    keyword: String(m.keyword || "").toLowerCase().slice(0, 40),
+    summary: String(m.summary_en || "").slice(0, 140),
+  };
+}
+async function answer(q, channel, onText, extra = {}) {
+  const opts = Object.assign({ channel, maxWords: 90 }, extra);
+  const res = await askClaude(buildPrompt(q, opts), {
+    tier: $("#tier").value,
+    onText: ({ text }) => { const b = splitMeta(text).body; if (b) onText(b); },
+  });
+  const { body, meta } = splitMeta(res.text);
+  return { body, meta: normMeta(meta) };
+}
+async function logQuestion(q, channel, body, meta) {
+  const doc = {
+    q, qEn: meta.summary || q, lang: meta.language, district: $("#district").value, channel,
+    topic: meta.topic, keyword: meta.keyword, answer: body, sources: meta.sources,
+    confidence: meta.confidence, escalated: meta.escalate, status: meta.escalate ? "escalated" : "answered",
+    reply: "", createdAt: new Date().toISOString(), demo: false,
+  };
+  try { await dbAdd("questions", doc); }
+  catch (e) { if (!state.warned) { state.warned = true; toast(dbErrorCopy(e)); } }
+}
+
+/* ---------- trace panel ---------- */
+function showTrace(q, meta) {
+  const t = $("#trace"); t.replaceChildren();
+  t.append(h("div", { class: "item" },
+    h("div", { class: "item-h" }, h("span", { class: "pill acc", text: meta.topic }), meta.keyword ? h("span", { class: "pill", text: meta.keyword }) : null,
+      h("span", { class: "pill " + (meta.confidence === "high" ? "good" : meta.confidence === "low" ? "warn" : ""), text: meta.confidence + " confidence" }),
+      meta.escalate ? h("span", { class: "pill crit", text: "Sent to extension officer" }) : h("span", { class: "pill good", text: "Answered by Claude" })),
+    h("div", { class: "small" }, h("b", { text: "Question in English: " }), meta.summary || q)));
+  if (!meta.sources.length) t.append(h("div", { class: "empty", text: "No approved passage covered this question, so it was not answered from content." }));
+  for (const id of meta.sources) {
+    const p = LIB.find((x) => x.id === id);
+    t.append(h("div", { class: "passage", id: "tr-" + id }, h("span", { class: "tag", text: p.id + " · sample content" }), h("h3", { text: p.title }), h("p", { text: p.text })));
+  }
+}
+function flashPassage(id) {
+  const el = $("#tr-" + id); if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1500);
+}
+
+/* ---------- chat ---------- */
+function bubble(cls, text) {
+  const b = h("div", { class: "bubble " + cls }, h("span", { class: "body", text }));
+  $("#msgs").append(b); $("#msgs").scrollTop = $("#msgs").scrollHeight; return b;
+}
+function addMeta(b, body, meta) {
+  const m = h("div", { class: "meta" });
+  meta.sources.forEach((id) => m.append(h("button", { class: "chip", type: "button", text: id, title: "Show the passage used", onclick: () => flashPassage(id) })));
+  if (meta.escalate) m.append(h("span", { class: "pill crit", text: "Sent to officer" }));
+  if (CAP.tts) m.append(h("button", { class: "chip", type: "button", text: "▶ Listen", onclick: () => speakText(body, meta.language) }));
+  if (m.childNodes.length) b.append(m);
+}
+async function sendChat(q) {
+  q = q.trim(); if (!q || state.busy) return;
+  state.busy = true; $("#chatSend").disabled = true; $("#chatIn").value = "";
+  bubble("me", q);
+  const bot = bubble("bot", "Thinking…"); const body = bot.querySelector(".body"); body.classList.add("typing");
+  try {
+    const r = await answer(q, "chat", (t) => { body.classList.remove("typing"); body.textContent = t; $("#msgs").scrollTop = $("#msgs").scrollHeight; });
+    body.classList.remove("typing"); body.textContent = r.body; addMeta(bot, r.body, r.meta);
+    state.history.push({ role: "user", content: q }, { role: "assistant", content: r.body });
+    showTrace(q, r.meta); logQuestion(q, "chat", r.body, r.meta);
+  } catch (e) {
+    body.classList.remove("typing");
+    body.textContent = e.text || aiErrorCopy(e) || "Stopped.";
+    if (e.text && aiErrorCopy(e)) bubble("sys", aiErrorCopy(e));
+  } finally { state.busy = false; $("#chatSend").disabled = false; $("#msgs").scrollTop = $("#msgs").scrollHeight; }
+}
+function resetChat() {
+  state.history = []; $("#msgs").replaceChildren();
+  bubble("sys", "Today · messages are answered by Claude from approved content");
+  bubble("bot", "Lumela! I'm Molemi. Ask me about crops, pests, livestock or weather, in Sesotho or English.");
+}
+
+/* ---------- USSD ---------- */
+const MENU = "Molemi *321#\n1. Ask a question\n2. Planting calendar\n3. Livestock alerts\n4. Market prices\n5. Message an officer";
+const CAL = "Planting calendar (sample)\nLowland maize: mid-Oct to mid-Dec, after 25mm rain\nMountain maize: Oct to early Nov, early varieties\nSorghum: Nov-Dec\nBeans: Nov-Dec, after frost";
+const ussd = { mode: "menu", last: null };
+function ussdShow(t) { $("#ussdBox").textContent = t; }
+function ussdHome() { ussd.mode = "menu"; ussdShow(MENU); }
+function alertsText() {
+  const sig = signals().filter((s) => s.flag).slice(0, 2);
+  if (!sig.length) return "Livestock alerts\nNo alerts for your area this week.";
+  return "Livestock alerts\n" + sig.map((s) => `${s.cur} reports of ${s.keyword} in ${s.district} this week.`).join("\n") + "\nAsk option 1 for advice.";
+}
+async function ussdInput(v) {
+  v = v.trim(); if (!v) return;
+  if (v === "00") { ussdHome(); return; }
+  if (ussd.mode === "wait") return;
+  if (ussd.mode === "menu") {
+    if (v === "1") { ussd.mode = "ask"; ussdShow("Type your question\n(Sesotho or English):"); }
+    else if (v === "2") ussdShow(CAL + "\n\n00. Main menu");
+    else if (v === "3") ussdShow(alertsText() + "\n\n00. Main menu");
+    else if (v === "4") ussdShow("Market prices\nNo live prices in this prototype. The pilot links to a price feed.\n\n00. Main menu");
+    else if (v === "5") { ussd.mode = "officer"; ussdShow("Type your message for the extension officer:"); }
+    else ussdShow("Invalid choice.\n\n" + MENU);
+    return;
+  }
+  if (ussd.mode === "ask") {
+    ussd.mode = "wait"; ussdShow("Please wait…");
+    try {
+      const r = await answer(v, "ussd", (t) => ussdShow(t), { maxChars: 160 });
+      ussd.last = r; ussd.mode = "after";
+      ussdShow(r.body + "\n\n1. Full answer by SMS\n00. Main menu");
+      showTrace(v, r.meta); logQuestion(v, "ussd", r.body, r.meta);
+    } catch (e) { ussd.mode = "menu"; ussdShow((aiErrorCopy(e) || "Cancelled.") + "\n\n00. Main menu"); }
+    return;
+  }
+  if (ussd.mode === "after") {
+    if (v === "1") ussdShow("In the pilot, the full answer arrives by SMS. (No SMS is sent from this demo.)\n\n00. Main menu");
+    else ussdHome();
+    ussd.mode = "menu"; return;
+  }
+  if (ussd.mode === "officer") {
+    const meta = { language: "en", sources: [], confidence: "low", escalate: true, topic: "other", keyword: "", summary: v.slice(0, 120) };
+    logQuestion(v, "ussd", "(Sent straight to the officer)", meta);
+    ussd.mode = "menu"; ussdShow("Thank you. Your extension officer will reply by SMS.\n\n00. Main menu");
+  }
+}
+
+/* ---------- voice line ---------- */
+const call = { on: false, heard: "" };
+function setCall(on) {
+  call.on = on; const btn = $("#callBtn");
+  btn.replaceChildren(icon(on ? "hang" : "phone"));
+  btn.setAttribute("aria-label", on ? "End call" : "Start call");
+  btn.dataset.live = on ? "true" : "false";
+  $("#callMic").hidden = !on || !CAP.dictation;
+  $("#callTypeForm").hidden = !on || !!CAP.dictation;
+  $("#callLine").textContent = on ? (CAP.dictation ? "Connected. Tap the microphone and ask your question." : "Connected. Speech input isn't available here, so type what the caller says.") : "Call 0800 MOLEMI to ask by voice.";
+  $("#callHeard").textContent = ""; $("#callAnswer").textContent = "";
+  if (on) speakText("Lumela! This is Molemi. Ask your farming question after you tap the microphone.", "en");
+  else if (CAP.tts) CAP.tts.stop();
+}
+async function voiceAsk(q) {
+  q = q.trim(); if (!q) return;
+  $("#callHeard").textContent = "You: " + q;
+  $("#callAnswer").textContent = "Molemi is thinking…";
+  try {
+    const r = await answer(q, "voice", (t) => { $("#callAnswer").textContent = t; }, { maxWords: 60, voice: true });
+    $("#callAnswer").textContent = r.body;
+    showTrace(q, r.meta); logQuestion(q, "voice", r.body, r.meta);
+    if (call.on) speakText(r.body, r.meta.language);
+  } catch (e) { $("#callAnswer").textContent = e.text || aiErrorCopy(e); }
+}
+
+/* ---------- officer dashboard ---------- */
+function signals() {
+  const now = Date.now(), cur = new Map(), prev = new Map();
+  for (const q of state.questions) {
+    if (!q.keyword) continue;
+    const age = now - Date.parse(q.createdAt), key = q.district + "|" + q.keyword;
+    if (age <= 7 * DAY) cur.set(key, (cur.get(key) || 0) + 1);
+    else if (age <= 14 * DAY) prev.set(key, (prev.get(key) || 0) + 1);
+  }
+  return [...cur.entries()].map(([k, c]) => {
+    const [district, keyword] = k.split("|"); const p = prev.get(k) || 0;
+    return { district, keyword, cur: c, prev: p, flag: c >= 3 && c >= 2 * p };
+  }).sort((a, b) => (b.flag - a.flag) || (b.cur - a.cur)).slice(0, 6);
+}
+function periodQs() {
+  const d = $("#offDistrict").value, days = +$("#offPeriod").value;
+  return state.questions.filter((q) => (d === "all" || q.district === d) && Date.now() - Date.parse(q.createdAt) <= days * DAY);
+}
+function renderOfficer() {
+  const qs = periodQs(), d = $("#offDistrict").value;
+  const ai = qs.filter((q) => !q.escalated).length;
+  const open = state.questions.filter((q) => q.status === "escalated" && (d === "all" || q.district === d));
+  const basic = qs.filter((q) => q.channel !== "chat").length;
+  $("#kpis").replaceChildren(
+    kpi("Questions", qs.length, "in the period"),
+    kpi("Answered by Claude", pct(ai, qs.length) + "%", ai + " without an officer"),
+    kpi("Waiting for an officer", open.length, "open now", open.length > 5 ? "warn" : null),
+    kpi("By voice or USSD", pct(basic, qs.length) + "%", "reach beyond smartphones"));
+
+  // queue
+  const queue = $("#queue"); queue.replaceChildren();
+  $("#queueCount").textContent = open.length ? open.length + " open" : "";
+  if (!open.length) queue.append(h("div", { class: "empty", text: "Nothing waiting. Escalated questions from farmers appear here." }));
+  open.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)).slice(0, 12).forEach((q) => queue.append(queueItem(q)));
+
+  // signals
+  const sg = $("#signals"); sg.replaceChildren();
+  const s = signals().filter((x) => d === "all" || x.district === d);
+  if (!s.length) sg.append(h("div", { class: "empty", text: "No repeated problems this week." }));
+  s.forEach((x) => sg.append(h("div", { class: "item" + (x.flag ? " signal" : "") },
+    h("div", { class: "item-h" }, x.flag ? h("span", { class: "pill crit", text: "Possible outbreak" }) : h("span", { class: "pill", text: "Watch" }), h("span", { text: x.district })),
+    h("div", null, h("b", { text: x.keyword }), ` · ${x.cur} report${x.cur === 1 ? "" : "s"} this week, ${x.prev} the week before`))));
+
+  renderBars($("#topicBars"), countBy(qs, (q) => q.topic), { hiKey: (countBy(qs, (q) => q.topic)[0] || [])[0] });
+
+  const tb = $("#recent"); tb.replaceChildren();
+  if (!state.questions.length) tb.append(h("tr", null, h("td", { colspan: 6, class: "muted", text: "No questions yet. Ask one on the Farmer's phone tab." })));
+  qs.slice(0, 25).forEach((q) => tb.append(h("tr", null,
+    h("td", { class: "muted", text: relTime(q.createdAt) }), h("td", { text: q.district }), h("td", { text: CHANNEL_NAME[q.channel] || q.channel }),
+    h("td", { text: q.topic }), h("td", { text: q.qEn || q.q }),
+    h("td", null, statusPill(q.status)))));
+}
+function statusPill(s) {
+  if (s === "escalated") return h("span", { class: "pill crit", text: "Waiting" });
+  if (s === "replied") return h("span", { class: "pill good", text: "Officer replied" });
+  return h("span", { class: "pill", text: "Answered" });
+}
+function queueItem(q) {
+  const ta = h("textarea", { class: "input", rows: 3, placeholder: "Reply to the farmer (sent by SMS in the pilot)", "aria-label": "Reply" });
+  const draft = h("button", { class: "btn sm", type: "button" }, icon("spark"), "Draft with Claude");
+  const send = h("button", { class: "btn sm primary", type: "button", text: "Send reply" });
+  draft.onclick = async () => {
+    draft.disabled = true; ta.value = "Claude is drafting…";
+    try {
+      const r = await askClaude([
+        "You help a district extension officer in Lesotho reply to a farmer by SMS.",
+        "Use the approved passages where they apply. If the problem needs a vet or a farm visit, say the officer will arrange it. Do not invent doses, prices or product names.",
+        `Write in ${q.lang === "st" ? "Sesotho" : "English"}. At most 300 characters. Return only the SMS text.`,
+        "", "Approved passages:", LIB.map((p) => `[${p.id}] ${p.title}: ${p.text}`).join("\n"), "",
+        `Farmer (${q.district}, via ${CHANNEL_NAME[q.channel] || q.channel}) asked: ${q.q}`,
+        q.answer ? "Automatic first answer already sent: " + q.answer : "",
+      ].join("\n"), { tier: "default", onText: ({ text }) => { ta.value = text; } });
+      ta.value = r.text.trim();
+    } catch (e) { ta.value = ""; toast(aiErrorCopy(e)); }
+    finally { draft.disabled = false; }
+  };
+  send.onclick = async () => {
+    const text = ta.value.trim(); if (!text) { toast("Write a reply first."); return; }
+    send.disabled = true;
+    try { await dbUpdate("questions", q._id, { status: "replied", reply: text, repliedAt: new Date().toISOString() }); toast("Reply saved. In the pilot it goes to the farmer by SMS."); }
+    catch (e) { toast(dbErrorCopy(e)); send.disabled = false; }
+  };
+  if (CAP.canWrite === false) { send.disabled = true; send.title = "View-only access"; }
+  return h("div", { class: "item" },
+    h("div", { class: "item-h" }, h("span", { class: "pill acc", text: q.topic || "other" }), h("span", { text: q.district }), h("span", { text: "· " + (CHANNEL_NAME[q.channel] || q.channel) }), h("span", { text: "· " + relTime(q.createdAt) }), q.demo ? h("span", { class: "pill", text: "example" }) : null),
+    h("q", { text: q.q }),
+    q.qEn && q.qEn !== q.q ? h("div", { class: "small muted", text: "English: " + q.qEn }) : null,
+    q.answer && !q.answer.startsWith("(") ? h("div", { class: "ans", text: "Auto-answer: " + q.answer }) : null,
+    h("div", { class: "reply-box" }, ta, h("div", { class: "row" }, draft, send)));
+}
+async function writeBrief() {
+  const qs = periodQs(); const out = $("#briefOut"); const btn = $("#briefBtn");
+  if (!qs.length) { toast("No questions in this period yet."); return; }
+  btn.disabled = true; out.textContent = "Claude is reading " + qs.length + " questions…";
+  const d = $("#offDistrict").value;
+  const lines = qs.slice(0, 200).map((q) => `- ${fmtDate(q.createdAt)} | ${q.district} | ${q.channel} | ${q.topic} | ${q.keyword || "-"} | ${q.qEn || q.q} | ${q.status}`).join("\n");
+  try {
+    const r = await askClaude([
+      `Write a short weekly brief for the ${d === "all" ? "national extension coordinator" : d + " district agricultural officer"} in Lesotho, from the farmer questions below (one per line: date | district | channel | topic | keyword | question | status).`,
+      "Sections, each starting with its name and a colon: Top issues (with counts), Possible outbreaks, Recommended actions (3), Content gaps (questions the approved content could not answer).",
+      "Plain text, no markdown symbols, under 180 words. Do not invent numbers that are not in the data.",
+      "", lines,
+    ].join("\n"), { tier: "default", onText: ({ text }) => { out.textContent = text; } });
+    out.textContent = r.text.trim(); $("#briefHint").textContent = "Drafted by Claude from " + qs.length + " questions. Check it before sharing.";
+  } catch (e) { out.textContent = e.text || ""; toast(aiErrorCopy(e)); }
+  finally { btn.disabled = false; }
+}
+
+/* ---------- library ---------- */
+function renderLibrary() {
+  $("#library").replaceChildren(...LIB.map((p) => h("article", { class: "passage" },
+    h("span", { class: "tag", text: p.id + " · " + p.topic + " · sample" }), h("h3", { text: p.title }), h("p", { text: p.text }))));
+}
+
+/* ---------- boot ---------- */
+function setChannel(c) {
+  state.chan = c;
+  $$(".channels button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.chan === c)));
+  $$("[data-pane]").forEach((p) => { p.hidden = p.dataset.pane !== c; });
+  $("#chanLabel").textContent = { chat: "WhatsApp · toll-free", ussd: "USSD · any phone", voice: "Voice · toll-free" }[c];
+  if (c === "ussd" && !$("#ussdBox").textContent) ussdHome();
+  if (c !== "voice" && call.on) setCall(false);
+}
+function boot() {
+  $("#district").replaceChildren(...DISTRICTS.map((d) => h("option", { value: d, text: d, selected: d === "Berea" })));
+  $("#offDistrict").replaceChildren(h("option", { value: "all", text: "All districts" }), ...DISTRICTS.map((d) => h("option", { value: d, text: d })));
+  $("#chatSend").append(icon("send")); $("#chatMic").append(icon("mic")); $("#callMic").append(icon("mic")); $("#callBtn").append(icon("phone"));
+  $("#quick").replaceChildren(...QUICK.map((q) => h("button", { type: "button", text: q, onclick: () => sendChat(q) })));
+  $$(".channels button").forEach((b) => b.addEventListener("click", () => setChannel(b.dataset.chan)));
+  $("#chatForm").addEventListener("submit", (e) => { e.preventDefault(); sendChat($("#chatIn").value); });
+  $("#chatIn").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat($("#chatIn").value); } });
+  $("#clearChat").addEventListener("click", () => { resetChat(); ussdHome(); });
+  $("#ussdForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#ussdIn").value; $("#ussdIn").value = ""; ussdInput(v); });
+  $("#callBtn").addEventListener("click", () => setCall(!call.on));
+  $("#callTypeForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#callType").value; $("#callType").value = ""; voiceAsk(v); });
+  $("#offDistrict").addEventListener("change", renderOfficer);
+  $("#offPeriod").addEventListener("change", renderOfficer);
+  $("#briefBtn").addEventListener("click", writeBrief);
+  resetChat(); renderLibrary(); renderOfficer(); startRouter("farmer");
+}
+boot();
+capReady.then(() => {
+  const langCode = () => ({ st: "st", en: "en" }[$("#lang").value] || "");
+  wireMic($("#chatMic"), {
+    lang: langCode,
+    partial: (t) => { $("#chatIn").placeholder = t || "Listening…"; },
+    final: (t) => { const i = $("#chatIn"); i.value = (i.value ? i.value + " " : "") + t; },
+    done: () => { $("#chatIn").placeholder = "Ask in Sesotho or English…"; if ($("#chatIn").value.trim()) sendChat($("#chatIn").value); },
+  });
+  wireMic($("#callMic"), {
+    lang: langCode,
+    partial: (t) => { $("#callHeard").textContent = t; },
+    final: (t) => { call.heard = (call.heard ? call.heard + " " : "") + t; $("#callHeard").textContent = call.heard; },
+    done: () => { const q = call.heard; call.heard = ""; if (q.trim()) voiceAsk(q); },
+  });
+  $("#callMic").hidden = !call.on || !CAP.dictation;
+  if (!CAP.sample) $("#chatIn").placeholder = "Claude isn't available in this view";
+  watchCollection("questions", (qs) => { state.questions = qs; renderOfficer(); }, { order: "createdAt", dir: "desc", limit: 500, statusEl: $("#dbStatus") });
+});
+
+</script>
+
+</body></html>
